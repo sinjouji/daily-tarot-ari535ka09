@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex,nofollow">
+<title>タロット辞典＆占い補助</title>
+<link rel="icon" href="icon-ura.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-ura.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="theme-dark">
+
+  <!-- アプリ全体のヘッダー -->
+  <header class="app-header">
+    <span class="app-header-symbol">✦</span>
+    <h1 class="app-header-title">タロット辞典</h1>
+  </header>
+
+  <main class="app-main">
+
+    <!-- ============================================================
+         ① ホーム
+    ============================================================ -->
+    <section class="view" data-view="home">
+      <div id="daily-card-widget" class="daily-card-widget"></div>
+
+      <div class="home-menu">
+        <button class="home-menu-item" data-nav="dictionary">
+          <span class="home-menu-symbol">☾</span>
+          <span>辞典を見る</span>
+        </button>
+        <button class="home-menu-item" data-nav="divination">
+          <span class="home-menu-symbol">✦</span>
+          <span>占いをする</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         ② 辞典（一覧 / 詳細 / 編集の3サブビュー）
+    ============================================================ -->
+    <section class="view" data-view="dictionary">
+
+      <div class="dictionary-subview" data-subview="list">
+        <div class="board-header">
+          <h2 class="view-title">辞典 <span class="view-title-sub">大アルカナ 22枚</span></h2>
+          <button id="btn-toggle-favorites-filter" class="btn btn-ghost btn-sm">★ お気に入りのみ</button>
+        </div>
+        <div id="dictionary-list-grid" class="card-list-grid"></div>
+      </div>
+
+      <div class="dictionary-subview" data-subview="detail" hidden>
+        <button id="btn-back-to-list" class="btn btn-text">← 一覧に戻る</button>
+
+        <div class="detail-header">
+          <div class="card-medallion card-medallion-lg">
+            <span id="detail-card-symbol" class="card-medallion-symbol"></span>
+          </div>
+          <div>
+            <h2 id="detail-card-name" class="detail-card-name"></h2>
+            <span id="detail-card-number" class="detail-card-number"></span>
+          </div>
+          <button id="btn-toggle-favorite" class="btn btn-ghost btn-sm favorite-toggle-btn">☆</button>
+          <button id="btn-edit-card" class="btn btn-primary btn-sm">編集</button>
+        </div>
+
+        <!-- 表示データ（正位置・逆位置） -->
+        <div class="orientation-columns">
+          <div id="detail-upright" class="orientation-block"></div>
+          <div id="detail-reversed" class="orientation-block"></div>
+        </div>
+
+        <!-- AI下書きエリア：表示データとは完全に別領域として分離 -->
+        <div class="ai-draft-section">
+          <h3 class="section-title">AI下書き <span class="section-title-note">（表示データとは別管理・下書きのみ）</span></h3>
+
+          <div class="ai-draft-generate-row">
+            <div class="orientation-toggle" id="ai-generate-orientation-toggle">
+              <button type="button" id="ai-generate-upright" class="btn btn-toggle btn-sm">正位置</button>
+              <button type="button" id="ai-generate-reversed" class="btn btn-toggle btn-sm">逆位置</button>
+            </div>
+            <button type="button" id="btn-generate-ai-draft" class="btn btn-primary btn-sm">AI下書き生成</button>
+          </div>
+
+          <div id="ai-draft-list" class="ai-draft-list"></div>
+
+          <details class="ai-draft-manual">
+            <summary>手動で下書きを追加</summary>
+            <form id="ai-draft-form" class="ai-draft-form">
+              <input id="ai-draft-model-input" class="input-text" type="text" placeholder="モデル名（例: claude-haiku）">
+              <textarea id="ai-draft-body-input" class="input-textarea" placeholder="AIによる下書き本文（手動貼り付け用）" rows="3"></textarea>
+              <button type="submit" class="btn btn-ghost">下書きを追加</button>
+            </form>
+          </details>
+        </div>
+      </div>
+
+      <div class="dictionary-subview" data-subview="edit" hidden>
+        <h2 id="edit-card-name" class="view-title"></h2>
+        <form id="card-edit-form">
+
+          <fieldset class="edit-fieldset">
+            <legend>正位置</legend>
+            <label class="field-label">キーワード（読点・カンマ区切り）
+              <input id="edit-upright-keywords" class="input-text" type="text">
+            </label>
+            <label class="field-label">一言
+              <input id="edit-upright-summary" class="input-text" type="text">
+            </label>
+            <label class="field-label">詳細説明
+              <textarea id="edit-upright-description" class="input-textarea" rows="4"></textarea>
+            </label>
+            <label class="field-label">メモ
+              <textarea id="edit-upright-memo" class="input-textarea" rows="2"></textarea>
+            </label>
+          </fieldset>
+
+          <fieldset class="edit-fieldset">
+            <legend>逆位置</legend>
+            <label class="field-label">キーワード（読点・カンマ区切り）
+              <input id="edit-reversed-keywords" class="input-text" type="text">
+            </label>
+            <label class="field-label">一言
+              <input id="edit-reversed-summary" class="input-text" type="text">
+            </label>
+            <label class="field-label">詳細説明
+              <textarea id="edit-reversed-description" class="input-textarea" rows="4"></textarea>
+            </label>
+            <label class="field-label">メモ
+              <textarea id="edit-reversed-memo" class="input-textarea" rows="2"></textarea>
+            </label>
+          </fieldset>
+
+          <div class="form-actions">
+            <button type="button" id="btn-cancel-edit" class="btn btn-ghost">キャンセル</button>
+            <button type="submit" class="btn btn-primary">保存する</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         ③ 占い（スプレッド選択 / 盤面 の2サブビュー）
+    ============================================================ -->
+    <section class="view" data-view="divination">
+
+      <div class="divination-subview" data-subview="selector">
+        <div class="board-header">
+          <h2 class="view-title">占い <span class="view-title-sub">スプレッドを選択</span></h2>
+          <button id="btn-open-history" class="btn btn-ghost btn-sm">占い履歴</button>
+        </div>
+        <div id="divination-spread-list" class="spread-select-list"></div>
+      </div>
+
+      <div class="divination-subview" data-subview="board" hidden>
+        <div class="board-header">
+          <button id="btn-change-spread" class="btn btn-text">← スプレッド選択</button>
+          <h2 id="divination-spread-title" class="view-title"></h2>
+          <button id="btn-restart-reading" class="btn btn-ghost btn-sm">引き直す</button>
+        </div>
+
+        <div id="divination-board" class="spread-board"></div>
+
+        <label class="field-label reading-question-label">質問（任意）
+          <input id="reading-question-input" class="input-text" type="text" placeholder="例: 今の仕事を続けるべき？">
+        </label>
+
+        <div id="divination-summary" class="reading-summary"></div>
+
+        <button id="btn-ai-reading" class="btn btn-primary ai-reading-btn">AIで読み解く</button>
+        <div id="ai-reading-result" class="ai-reading-result"></div>
+      </div>
+
+      <div class="divination-subview" data-subview="history" hidden>
+        <div class="board-header">
+          <button id="btn-close-history" class="btn btn-text">← 占いへ戻る</button>
+          <h2 class="view-title">占い履歴</h2>
+        </div>
+        <div id="reading-history-list" class="reading-history-list"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         ④ スプレッド管理（一覧 / 編集 の2サブビュー）
+    ============================================================ -->
+    <section class="view" data-view="spreads">
+
+      <div class="spreads-subview" data-subview="list">
+        <h2 class="view-title">スプレッド管理</h2>
+        <div id="spreads-list" class="spreads-list"></div>
+        <button id="btn-new-spread" class="btn btn-primary">新規作成</button>
+      </div>
+
+      <div class="spreads-subview" data-subview="editor" hidden>
+        <form id="spread-editor-form">
+          <label class="field-label">スプレッド名
+            <input id="spread-editor-name-input" class="input-text" type="text">
+          </label>
+
+          <p class="field-hint">盤面上のマーカーをドラッグして位置を調整できます。</p>
+          <div id="spread-editor-board" class="spread-board spread-board-editor"></div>
+
+          <div class="spread-editor-list-header">
+            <span>位置ラベル</span>
+            <button type="button" id="btn-add-position" class="btn btn-ghost btn-sm">＋ 位置を追加</button>
+          </div>
+          <div id="spread-editor-position-list" class="position-list"></div>
+
+          <div class="form-actions">
+            <button type="button" id="btn-cancel-spread-edit" class="btn btn-ghost">キャンセル</button>
+            <button type="submit" class="btn btn-primary">保存する</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         ⑤ 設定
+    ============================================================ -->
+    <section class="view" data-view="settings">
+      <h2 class="view-title">設定</h2>
+
+      <div class="settings-group">
+        <h3 class="settings-group-title">テーマ</h3>
+        <div class="theme-toggle">
+          <button id="theme-dark-btn" class="btn btn-toggle">夜のとばり</button>
+          <button id="theme-light-btn" class="btn btn-toggle">満月の紙</button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3 class="settings-group-title">AI設定（Gemini）</h3>
+        <form id="ai-settings-form" class="ai-settings-form">
+          <label class="field-label">Gemini APIキー
+            <input id="ai-settings-api-key" class="input-text" type="password" autocomplete="off" placeholder="APIキーを入力">
+          </label>
+          <label class="field-label">使用モデル
+            <select id="ai-settings-model" class="input-text">
+              <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite（高速・軽量）</option>
+              <option value="gemini-2.5-flash">gemini-2.5-flash（標準）</option>
+            </select>
+          </label>
+          <button type="submit" class="btn btn-primary btn-sm">AI設定を保存</button>
+        </form>
+        <p class="field-hint">APIキーはこの端末のブラウザ内にのみ保存され、エクスポートファイルには含まれません。</p>
+      </div>
+
+      <div class="settings-group">
+        <h3 class="settings-group-title">今日の一枚</h3>
+        <button id="btn-reset-daily-card" class="btn btn-ghost">今日の一枚をリセット</button>
+      </div>
+
+      <div class="settings-group">
+        <h3 class="settings-group-title">データ管理</h3>
+        <button id="btn-export-data" class="btn btn-ghost">データをエクスポート</button>
+        <label class="btn btn-ghost file-input-label">
+          データをインポート
+          <input id="import-file-input" type="file" accept="application/json" hidden>
+        </label>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ボトムナビゲーション -->
+  <nav class="bottom-nav">
+    <button class="nav-item" data-view="home"><span class="nav-icon">✦</span><span>ホーム</span></button>
+    <button class="nav-item" data-view="dictionary"><span class="nav-icon">☾</span><span>辞典</span></button>
+    <button class="nav-item" data-view="divination"><span class="nav-icon">◈</span><span>占い</span></button>
+    <button class="nav-item" data-view="spreads"><span class="nav-icon">▦</span><span>スプレッド</span></button>
+    <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span><span>設定</span></button>
+  </nav>
+
+  <!-- カード選択モーダル（占い画面から呼ばれる） -->
+  <div id="card-picker-modal" class="modal" hidden>
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3>カードを選択</h3>
+        <button id="btn-close-card-picker" class="btn btn-text">閉じる</button>
+      </div>
+      <div class="orientation-toggle">
+        <button id="picker-orientation-upright" class="btn btn-toggle">正位置</button>
+        <button id="picker-orientation-reversed" class="btn btn-toggle">逆位置</button>
+      </div>
+      <div id="card-picker-grid" class="card-list-grid card-picker-grid"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       スクリプト読み込み（依存の少ない順）
+  ============================================================ -->
+  <script src="js/utils.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/promptBuilder.js"></script>
+  <script src="js/aiProviders.js"></script>
+  <script src="js/aiService.js"></script>
+  <script src="js/spreadsData.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/dailyCardView.js"></script>
+  <script src="js/dictionaryView.js"></script>
+  <script src="js/spreadsManager.js"></script>
+  <script src="js/divinationView.js"></script>
+  <script src="js/historyView.js"></script>
+  <script src="js/settingsView.js"></script>
+  <script src="js/main.js"></script>
+
+  <!-- ホームメニューのボタンからも画面遷移できるようにする簡易配線 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      qsa('[data-nav]').forEach(btn => {
+        btn.addEventListener('click', () => navigateTo(btn.dataset.nav));
+      });
+    });
+  </script>
+
+</body>
+</html>
