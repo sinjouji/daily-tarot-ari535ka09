@@ -2,8 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>タロット辞典＆占い補助</title>
 <link rel="icon" href="icon-ura.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-ura.png">
@@ -153,6 +152,15 @@
           <h2 class="view-title">占い <span class="view-title-sub">スプレッドを選択</span></h2>
           <button id="btn-open-history" class="btn btn-ghost btn-sm">占い履歴</button>
         </div>
+
+        <label class="field-label reading-question-label">質問（任意）
+          <input id="pre-reading-question-input" class="input-text" type="text" placeholder="例: 今の仕事を続けるべきか">
+        </label>
+        <p class="field-hint">できるだけ具体的な質問にすると、カードを読み解きやすくなります。</p>
+
+        <button id="btn-recommend-spread" class="btn btn-ghost">この質問に合いそうな占い方法を見る</button>
+        <div id="spread-recommendation-result" class="spread-recommendation-result"></div>
+
         <div id="divination-spread-list" class="spread-select-list"></div>
       </div>
 
@@ -162,6 +170,8 @@
           <h2 id="divination-spread-title" class="view-title"></h2>
           <button id="btn-restart-reading" class="btn btn-ghost btn-sm">引き直す</button>
         </div>
+
+        <button id="btn-open-guide-from-board" class="btn btn-ghost btn-sm guide-from-board-btn">このスプレッドのガイド</button>
 
         <div id="divination-board" class="spread-board"></div>
 
@@ -181,6 +191,15 @@
           <h2 class="view-title">占い履歴</h2>
         </div>
         <div id="reading-history-list" class="reading-history-list"></div>
+      </div>
+
+      <div class="divination-subview" data-subview="guide" hidden>
+        <div class="board-header">
+          <button id="btn-close-guide" class="btn btn-text">← 戻る</button>
+          <h2 id="guide-spread-name" class="view-title"></h2>
+        </div>
+        <div id="guide-content" class="guide-content"></div>
+        <button id="btn-start-from-guide" class="btn btn-primary guide-start-btn">このスプレッドで占う</button>
       </div>
     </section>
 
@@ -306,6 +325,8 @@
   <script src="js/spreadsManager.js"></script>
   <script src="js/divinationView.js"></script>
   <script src="js/historyView.js"></script>
+  <script src="js/guideView.js"></script>
+  <script src="js/spreadRecommendation.js"></script>
   <script src="js/settingsView.js"></script>
   <script src="js/main.js"></script>
 
