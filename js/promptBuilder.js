@@ -178,7 +178,57 @@ function composeReadingPrompt(question, spread, filledCards, pastReadings = []) 
 }
 
 /* ------------------------------------------------------------
- * ⑥ カードのAI下書き用プロンプト（辞典の解釈を書く、別の業務用途）
+ * ⑥ 占い方法（スプレッド）のおすすめ診断プロンプト（V3で新規追加）
+ * ------------------------------------------------------------
+ * 「AIが占い方法を決定する」のではなく「候補を提示し、違いを説明する」
+ * という立場を保つため、出力はJSON（おすすめ・理由・他の候補・違い）に固定する。
+ * tarotPartnerのシステムプロンプトをそのまま再利用する。
+ * ---------------------------------------------------------- */
+
+/**
+ * スプレッドのおすすめ診断プロンプトを組み立てる。
+ * @param {string} question
+ * @param {Array<Object>} spreadsWithGuide - id/name/positions/guideを持つスプレッド一覧
+ * @returns {string}
+ */
+function composeSpreadRecommendationPrompt(question, spreadsWithGuide) {
+  const spreadLines = spreadsWithGuide.map(spread => {
+    const guide = spread.guide || {};
+    const lines = [
+      `ID: ${spread.id}`,
+      `名前: ${spread.name}`,
+      `使用枚数: ${spread.positions.length}枚`,
+    ];
+    if (guide.overview) lines.push(`概要: ${guide.overview}`);
+    if (guide.suitableQuestions?.length) lines.push(`向いている質問: ${guide.suitableQuestions.join(' / ')}`);
+    return lines.join('\n');
+  }).join('\n\n');
+
+  const instruction = [
+    `ユーザーの質問: ${question || '（特に指定なし）'}`,
+    '',
+    '現在登録されているタロットスプレッド（占い方法）は以下の通りです:',
+    spreadLines,
+    '',
+    'この質問に対してどのスプレッドが合いそうかを考え、以下のJSON形式のみで出力してください',
+    '（前置きや説明文、コードフェンスは不要です）。理由や違いの説明は、断定を避け、',
+    '「〜という視点で考えたい場合に向いています」のような、考える余地を残す言い回しにしてください。',
+    'あなたは占い方法を決定する存在ではなく、候補を提示して違いを説明する立場であることを忘れないでください。',
+    '{',
+    '  "recommendedSpreadId": "最もおすすめするスプレッドのID",',
+    '  "reason": "おすすめする理由",',
+    '  "alternatives": [',
+    '    { "spreadId": "他の候補のID", "reason": "その候補が向いている場合の説明" }',
+    '  ],',
+    '  "differenceNote": "おすすめと他の候補との違いについての補足"',
+    '}',
+  ].join('\n');
+
+  return [buildSystemPrompt('tarotPartner'), instruction].join('\n\n---\n\n');
+}
+
+/* ------------------------------------------------------------
+ * ⑦ カードのAI下書き用プロンプト（辞典の解釈を書く、別の業務用途）
  * ------------------------------------------------------------
  * 読み解き（占い）とは別の目的（辞典の解釈文を書く）なので、
  * tarotPartnerのペルソナは使わず、単独の指示として組み立てる。

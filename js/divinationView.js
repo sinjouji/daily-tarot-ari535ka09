@@ -18,6 +18,8 @@ let activeSpread = null;
 let currentReading = {};
 // カード選択モーダルでどの位置に結果を入れようとしているか
 let pendingPositionId = null;
+// スプレッド選択画面 ⇔ 占い盤面のどちらで入力しても引き継がれる質問文（V3追加）
+let carriedQuestionText = '';
 
 /**
  * 占い画面が表示される時の入口。常にスプレッド選択から始める。
@@ -26,12 +28,29 @@ function renderDivinationView() {
   showSpreadSelector();
 }
 
+/**
+ * 質問入力欄（スプレッド選択画面・占い盤面の両方）の入力を、
+ * 常に同じ質問文として引き継げるように同期させる。アプリ起動時に1度だけ呼べばよい。
+ */
+function initQuestionCarrySync() {
+  qs('#pre-reading-question-input').addEventListener('input', (event) => {
+    carriedQuestionText = event.target.value;
+  });
+  qs('#reading-question-input').addEventListener('input', (event) => {
+    carriedQuestionText = event.target.value;
+  });
+}
+
 /* ------------------------------------------------------------
  * スプレッド選択
  * ---------------------------------------------------------- */
 
 function showSpreadSelector() {
   setDivinationSubview('selector');
+
+  // 引き継がれている質問文を反映する
+  qs('#pre-reading-question-input').value = carriedQuestionText;
+
   const listEl = qs('#divination-spread-list');
   listEl.innerHTML = '';
 
@@ -39,15 +58,29 @@ function showSpreadSelector() {
     const card = createEl('button', { className: 'spread-select-card' });
     card.appendChild(createEl('span', { className: 'spread-select-name', text: spread.name }));
     card.appendChild(createEl('span', { className: 'spread-select-count', text: `${spread.positions.length}枚のカードを使用` }));
+
+    if (spread.guide) {
+      const guideBtn = createEl('button', { className: 'btn btn-ghost btn-sm spread-select-guide-btn', text: 'ガイドを見る' });
+      guideBtn.addEventListener('click', (event) => {
+        event.stopPropagation(); // カード全体のclick(=占い開始)を発火させない
+        openSpreadGuide(spread, 'selector');
+      });
+      card.appendChild(guideBtn);
+    }
+
     card.addEventListener('click', () => startReading(spread));
     listEl.appendChild(card);
   });
 
   qs('#btn-open-history').onclick = () => openReadingHistory();
+
+  qs('#btn-recommend-spread').onclick = () => {
+    renderSpreadRecommendation(qs('#pre-reading-question-input').value);
+  };
 }
 
 /**
- * 指定スプレッドで新しい読み解きを開始する（配置結果をリセット）。
+ * 指定スプレッドで新しい読み解きを開始する（配置結果をリセットする。質問文は引き継ぐ）。
  * @param {Object} spread
  */
 function startReading(spread) {
@@ -55,7 +88,7 @@ function startReading(spread) {
   currentReading = {};
   setDivinationSubview('board');
   qs('#divination-spread-title').textContent = spread.name;
-  qs('#reading-question-input').value = '';
+  qs('#reading-question-input').value = carriedQuestionText;
   qs('#ai-reading-result').innerHTML = '';
   renderDivinationBoard();
 }
@@ -99,6 +132,7 @@ function renderDivinationBoard() {
   };
   qs('#btn-change-spread').onclick = () => showSpreadSelector();
   qs('#btn-ai-reading').onclick = () => runAiReading();
+  qs('#btn-open-guide-from-board').onclick = () => openSpreadGuide(activeSpread, 'board');
 }
 
 /** 盤面の下に、配置済みカードの解釈をまとめて表示する（占いの読み解き補助の本体） */

@@ -78,3 +78,21 @@ async function generateReadingInterpretation(question, spread, filledCards, past
   const result = await sendPromptToProvider(prompt);
   return { prompt, body: result.text, modelName: result.modelName };
 }
+
+/* ------------------------------------------------------------
+ * ③ 占い方法（スプレッド）のおすすめ診断（V3で新規追加）
+ * ---------------------------------------------------------- */
+
+/**
+ * 質問内容とスプレッドのガイド情報をもとに、AIへおすすめのスプレッドを提案してもらう。
+ * あくまで参考情報であり、選択は常にユーザーが行う（呼び出し元のUIで担保する）。
+ * @param {string} question
+ * @param {Array<Object>} spreadsWithGuide
+ * @returns {Promise<{prompt:string, body:string, modelName:string, parsed:Object|null}>}
+ */
+async function recommendSpreadWithAi(question, spreadsWithGuide) {
+  const prompt = composeSpreadRecommendationPrompt(question, spreadsWithGuide);
+  const result = await sendPromptToProvider(prompt);
+  const parsed = extractJsonFromResponse(result.text);
+  return { prompt, body: result.text, modelName: result.modelName, parsed };
+}

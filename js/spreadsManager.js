@@ -38,6 +38,12 @@ function showSpreadsList() {
 
     const actions = createEl('div', { className: 'spread-list-actions' });
 
+    if (spread.guide) {
+      const guideBtn = createEl('button', { className: 'btn btn-ghost btn-sm', text: 'ガイド' });
+      guideBtn.addEventListener('click', () => openSpreadGuideFromSpreadsList(spread));
+      actions.appendChild(guideBtn);
+    }
+
     const editBtn = createEl('button', { className: 'btn btn-ghost btn-sm', text: '編集' });
     editBtn.addEventListener('click', () => openSpreadEditor(deepClone(spread)));
     actions.appendChild(editBtn);
@@ -70,6 +76,8 @@ function createBlankSpreadDraft() {
     id: generateId('spread'),
     name: '新しいスプレッド',
     isBuiltIn: false,
+    // V3: カスタムスプレッドにもガイド情報を持たせられる構造にしてある（編集UIは今後追加予定）
+    guide: null,
     positions: [
       { id: generateId('pos'), x: 50, y: 50, label: '位置1' },
     ],
